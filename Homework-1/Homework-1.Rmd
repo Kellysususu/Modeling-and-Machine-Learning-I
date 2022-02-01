@@ -202,7 +202,7 @@ Consider making the linear classifier more flexible, by adding squared terms for
 #  Question 2
 
 new_fit_lc <- function() {
-  lm(y~I(x1^2)+I(x2^2),data=df)
+  lm(y~I(x1)+I(x2)+I(x1^2)+I(x2^2),data=df)
 }
 
 new_predict_lc <-function(x,y){
@@ -234,5 +234,10 @@ sapply(lc_cont_lm, lines) # linear decision line
 
 Describe how this more flexible model affects the bias-variance tradeoff
 
-The quadratic model gives more flexibility to our model, which also increases the variance of the model when we change the x to squared terms. The high variance is more likely to result in overfitting of the model. As the variance increases, the bias of the model decreases. Therefore, we need to find a balance between bias and variance to  train our model.
+**Bias** is the difference(error) between predicted value and the actual value, it is measuring the accuracy of the model.
+
+**Variance** is the amount of variability in response to the change in training data.
+
+The quadratic model gives more flexibility to our model, which also increases the variance of the model when we add the squared terms. 
+The high variance is more likely to result in overfitting of the model. As the variance increases, the bias of the model decreases. Therefore, we need to find a balance between bias and variance to  train our model.
 

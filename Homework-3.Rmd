@@ -1,0 +1,142 @@
+---
+title: "Homework 3"
+author: "Kelly Chen"
+date: "2/9/2022"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**1. Load the prostate cancer data**
+
+```{r}
+library(dplyr)
+library(glmnet)
+library(magrittr)
+library(splines)
+prostate <- 
+  read.table(url(
+    'https://web.stanford.edu/~hastie/ElemStatLearn/datasets/prostate.data'))
+```
+
+**2. Reproduce correlation matrix**
+
+```{r}
+corre<-round(cor(y=prostate[,1:7],x=prostate[,2:8],method="pearson"),3)
+corre[upper.tri(corre)]<-""
+corre<-as.data.frame(corre)
+corre
+```
+
+
+
+```{r}
+prostate
+```
+**3-4.Treat lcavol as the outcome and Fit Linear Model using lm**
+
+```{r}
+# Split Dataset
+prostate_train<-prostate %>%
+  filter(train==TRUE) %>%
+  select(-train)
+prostate_test<-prostate %>%
+  filter(train==FALSE) %>%
+  select(-train)
+
+# Fit Linear Model
+fit<-lm(lcavol~.,data=prostate_train)
+summary(fit)
+```
+
+**5.Use the testing subset to compute the test error (average squared-error loss) using the fitted least-squares regression model**
+
+```{r}
+L2_loss<-function(y,yhat){
+  (y-yhat)^2
+}
+error<-function(data,fit,loss=L2_loss){
+  mean(loss(data$lcavol,predict(fit,newdata = data)))
+}
+error(prostate_test,fit)
+```
+
+**6.Train a ridge regression model using the glmnet function**
+
+```{r}
+#Fit Model
+form<- lcavol~lweight+age+lbph+lcp+pgg45+lpsa+svi+gleason
+x_inp<-model.matrix(form,data=prostate_train)
+y_out<-prostate_train$lcavol
+fit<-glmnet(x=x_inp,y=y_out,lambda=seq(0.5,0,-0.05),alpha=0)
+fit$beta
+
+
+```
+
+```{r}
+#Train Error
+error_g<-function(dat,fit,lam,form,loss=L2_loss){
+  x_inp<-model.matrix(form,data=dat)
+  y_out<-dat$lcavol
+  y_hat<-predict(fit,newx=x_inp,s=lam)
+  mean(loss(y_out,y_hat))
+}
+
+# Guess and Check
+
+
+error_g(prostate_train,fit,lam = 0.18,form=form)
+
+error_g(prostate_test,fit,lam =0.18,form=form)
+
+
+```
+
+**Step 7. Create figure of test error and training error**
+
+```{r}
+# Compute training and test errors
+error_train<-sapply(fit$lambda,function(lamb)
+  error_g(prostate_train,fit,lamb,form))
+error_test<-sapply(fit$lambda,function(lamb)
+  error_g(prostate_test,fit,lamb,form))
+
+#Plot
+plot(x=range(fit$lambda),
+     y=range(c(error_test,error_train)),
+     xlim=rev(range(fit$lambda)),
+     type='n',
+     xlab=expression(lambda),
+     ylab='train/test error')
+points(fit$lambda,error_train,pch=19,type='b',col='blue')
+points(fit$lambda,error_test,pch=19,type='b',col='red')
+legend('topright',c('train','test'),lty=1,pch=19,col=c('blue','red'),bty='n')
+#colnames(fit$beta)
+```
+
+
+
+
+
+
+**Step 8. Create figure for path diagram of the ridge regression analysis**
+
+```{r}
+plot(x=range(fit$lambda),
+     y=range(as.matrix(fit$beta)),
+     type='n',
+     xlab=expression(lambda),
+     ylab='coefficients')
+for(i in 1:nrow(fit$beta)){
+  points(x=fit$lambda,y=fit$beta[i,],pch=10,col='red')
+  lines(x=fit$lambda,y=fit$beta[i,],col='green')
+}
+text(x=0,y=fit$beta[,ncol(fit$beta)],
+     labels=rownames(fit$beta),
+     xpd=NA,pos=4,srt=45)
+abline(h=0,lty=3,lwd=1)
+```
+

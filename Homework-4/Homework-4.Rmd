@@ -1,0 +1,287 @@
+---
+title: "Homework-4"
+author: "Kelly Chen"
+date: "2/21/2022"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**Exercise 4**
+
+(a) On average, the fraction of the available observations would be 10%/2*2=10%.
+
+(b) On average,the fraction of the available observations would be 10%*10%=1%
+
+(c) On average, the fraction of the available observations would be 0.1^{100}.
+
+(d) When p gets larger, the number of available observations decrease exponentially near any given test observation, which makes it difficult to find the best estimators for KNN.
+
+(e) Suppose we want to set the length of each side as l, if we want to have l^{p}=0.1 we have to make l=sqrt[p]{0.1}. So:
+
+when p=1, the length is 0.1
+when p=2, the length is 0.1^{1/2}=0.316
+when p=100, the length is 0.1^{1/100}=0.977
+
+**Exercise 10**
+
+```{r}
+library(MASS)
+library(ISLR2)
+library(corrplot)
+library(class)
+library(e1071)
+```
+
+
+(a)
+
+```{r}
+# Numerical Summary of the data
+names(Weekly)
+dim(Weekly)
+summary(Weekly)
+
+# Graphical Summary of the data
+pairs(Weekly)
+plot(Volume~Year,col='Blue',data=Weekly)
+simplelm=lm(Volume~Year,data=Weekly)
+abline(simplelm,lwd=3,col='red')
+```
+
+(b)
+
+```{r}
+# Logistic Regression
+glm_fit<-glm(
+  Direction ~ Lag1+Lag2+Lag3+Lag4+Lag5+Volume,
+  data=Weekly,family = binomial
+)
+summary(glm_fit)
+```
+
+The lag2 seems to be statitically significant than the other features here, which is 0.0296, meaning that the direction is related to the response Direction. The coeffient is also positive meaning that if the market has a positive return on two days ago, it is more likely to go up today.
+
+(c)
+
+```{r}
+# Produce Confusion Matrix
+glm_probs<-predict(glm_fit,type="response")
+contrasts(Weekly$Direction)
+glm_pred<-rep("Down",1089)
+glm_pred[glm_probs>0.5]='Up'
+table(glm_pred,Weekly$Direction)
+
+# Calculate the correct predictions
+mean(glm_pred==Weekly$Direction)
+```
+
+The confusion matrix explain:
+
+The diagonal elements indicate correct predictions while the off-diagnal represent incorrect predictions. The model correctly predicted that the market would go up on 557 days and that it would go down 54 days. The total is 557+54=611 days of correct prediction.
+
+The overall fraction is 56.1%, meaning that the logistic regression correctly predicted the market 56.1% of the time. The training error rate is 1-56.1%=43.9%. The true positive is relatively high and so as the false positive rate. Most of the time, our model is predicting that the market is going up, while it is always making an error by predicting the uptrend.
+
+Since we are training on the same data set, it may underestimate the test error. 
+
+(d)
+
+```{r}
+# Set up train data from 1990 to 2008
+train<-Weekly$Year>=1990 & Weekly$Year<=2008
+weekly_train<-Weekly[train,]
+weekly_test<-Weekly[!train,]
+dim(weekly_test)
+
+# Use logistic regression to fit the train data
+
+train_fit<-glm(Direction~Lag2, data=weekly_train,family = binomial)
+
+# Produce confusion matrix for new fit data
+
+train_probs<-predict(train_fit,weekly_test,type="response")
+train_pred<-rep("Down",104)
+train_pred[train_probs>0.5]='Up'
+
+table(train_pred,weekly_test$Direction)
+mean(train_pred==weekly_test$Direction)
+```
+
+The overall fraction of correct predictions is 62.5%.
+
+(e) Linear Discriminant Analysis
+
+```{r}
+# Fit LDA model according to d
+lda_fit<-lda(Direction~Lag2,data=weekly_train)
+lda_pred<-predict(lda_fit,newdata=weekly_test,type='response')
+lda_class<-lda_pred$class
+
+# Create confusion matrix
+table(lda_class,weekly_test$Direction)
+
+# Calculate accuracy
+mean(lda_class==weekly_test$Direction)
+
+```
+
+From calculating accuracy, we can see that the accuracy of LDA is 62.5%.
+
+(f) Quadric Discriminant Analysis
+
+```{r}
+# Fit QDA model according to d
+qda_fit<-qda(Direction~Lag2,data=weekly_train)
+qda_pred<-predict(qda_fit,newdata=weekly_test,type='response')
+qda_class<-qda_pred$class
+
+# Create confusion matrix
+table(qda_class,weekly_test$Direction)
+
+# Calculate accuracy
+mean(qda_class==weekly_test$Direction)
+```
+
+From calculating accuracy, we can see that the accuracy of QDA is 58.7%.
+
+(g) KNN when k=1
+
+```{r}
+# Fit KNN
+set.seed(123)
+train_x<-cbind(weekly_train$Lag2)
+test_x<-cbind(weekly_test$Lag2)
+train_direction<-weekly_train$Direction
+test_direction<-weekly_test$Direction
+
+# Produce confusion matrix
+knn_pred<-knn(train_x,test_x,train_direction,k=1)
+table(knn_pred,test_direction)
+
+# Check accuracy
+mean(knn_pred==test_direction)
+
+```
+
+From calculating accuracy, we can see that the accuracy of KNN is 50.96%.
+
+(h) Naive Bayes
+
+```{r}
+# Fit Naive Bayes
+nb_fit<-naiveBayes(Direction~Lag2,weekly_train)
+nb_pred<-predict(nb_fit,weekly_test)
+
+
+# Create confusion matrix
+table(nb_pred,weekly_test$Direction)
+
+# Calculate accuracy
+mean(nb_pred==weekly_test$Direction)
+```
+
+From calculating accuracy, we can see that the accuracy of Naive Bayes is 58.7%.
+
+(i)
+
+From the calculation above, we can see that the logistic regression and linear discrimnant analysis provide the best results on this data, which are both 62.5%.
+
+(j) Experiment with different combinations for each methods
+
+Adding Volume as one predictor combine with Lag2 to test different models
+
+Logistic regression
+
+```{r}
+# Logistic regression
+glm_fit_2<-glm(Direction~Lag2+Volume,data=weekly_train,family = binomial)
+glm_pred_2<-predict(glm_fit_2,weekly_test,type='response')
+
+
+train_pred_2<-rep("Down",104)
+train_pred_2[glm_pred_2>0.5]='Up'
+
+table(train_pred_2,weekly_test$Direction)
+mean(train_pred_2==weekly_test$Direction)
+```
+
+From calculating accuracy, we can see that the accuracy of Naive Bayes is 53.8%.
+
+LDA
+
+```{r}
+# LDA
+
+lda_fit_2<-lda(Direction~Lag2+Volume,data=weekly_train)
+lda_pred_2<-predict(lda_fit_2,newdata=weekly_test,type='response')
+lda_class_2<-lda_pred_2$class
+
+# Create confusion matrix
+table(lda_class_2,weekly_test$Direction)
+
+# Calculate accuracy
+mean(lda_class_2==weekly_test$Direction)
+```
+
+From calculating accuracy, we can see that the accuracy of Naive Bayes is 53.8%.
+
+QDA
+
+```{r}
+# QDA
+
+qda_fit_2<-qda(Direction~Lag2+Volume,data=weekly_train)
+qda_pred_2<-predict(qda_fit_2,newdata=weekly_test,type='response')
+qda_class_2<-qda_pred_2$class
+
+# Create confusion matrix
+table(qda_class_2,weekly_test$Direction)
+
+# Calculate accuracy
+mean(qda_class_2==weekly_test$Direction)
+
+```
+
+From calculating accuracy, we can see that the accuracy of Naive Bayes is 47.1%.
+
+KNN
+
+```{r}
+# Fit KNN
+set.seed(123)
+train_x_2<-cbind(weekly_train$Lag2,weekly_train$Volume)
+test_x_2<-cbind(weekly_test$Lag2,weekly_test$Volume)
+
+
+# Produce confusion matrix
+knn_pred_2<-knn(train_x_2,test_x_2,train_direction,k=1)
+table(knn_pred_2,test_direction)
+
+# Check accuracy
+mean(knn_pred_2==test_direction)
+```
+
+From calculating accuracy, we can see that the accuracy of Naive Bayes is 55.8%.
+
+Naive Bayes
+
+```{r}
+# Naive Bayes
+nb_fit_2<-naiveBayes(Direction~Lag2+Volume,weekly_train)
+nb_pred_2<-predict(nb_fit_2,weekly_test)
+
+
+# Create confusion matrix
+table(nb_pred_2,weekly_test$Direction)
+
+# Calculate accuracy
+mean(nb_pred_2==weekly_test$Direction)
+```
+
+From calculating accuracy, we can see that the accuracy of Naive Bayes is 45.2%.
+
+
+**Summary**
+From adding the volume as another predictor, we find out that KNN becomes the best fit model with most accuracy in this situation.

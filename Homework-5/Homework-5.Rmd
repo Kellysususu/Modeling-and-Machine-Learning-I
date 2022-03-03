@@ -2,7 +2,7 @@
 title: "Homework-5"
 author: "Kelly Chen"
 date: "3/2/2022"
-output: html_document
+output: md_document
 ---
 
 ```{r setup, include=FALSE}

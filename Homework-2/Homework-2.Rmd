@@ -177,9 +177,9 @@ legend(-0.5,3.5,legend=c("L1_loss","L2_loss","tilted_25","tilted_75"),col=c("dar
 **Question 3**
 
 ```{r}
-fit_lin_q3<- function(y, x, loss, beta_init = c(-0.51, 0.75,0)) {
+fit_lin_q3<- function(y, x, loss, beta_init = c(-1.0, 0.0, -0.3), ...) {
   err <- function(beta)
-    mean(loss(y,  beta[1] + beta[2]*exp(-beta[3]*x)))
+    mean(loss(y,  beta[1] + beta[2]*exp(-beta[3]*x),...))
   beta <- optim(par = beta_init, fn = err)
   return(beta$par)
 }
@@ -206,10 +206,10 @@ x_grid <- seq(min(prostate_train$lpsa),
               max(prostate_train$lpsa),
               length.out=100)
 
-lin_pred_L1_q3 <- predict_lin(x=x_grid, beta=lin_beta_L1_q3)
-lin_pred_L2_q3 <- predict_lin(x=x_grid, beta=lin_beta_L2_q3)
-lin_pred_tilted_25_q3 <- predict_lin(x=x_grid, beta=lin_beta_tilted_25_q3)
-lin_pred_tilted_75_q3 <- predict_lin(x=x_grid, beta=lin_beta_tilted_75_q3)
+lin_pred_L1_q3 <- predict_lin_q3(x=x_grid, beta=lin_beta_L1_q3)
+lin_pred_L2_q3 <- predict_lin_q3(x=x_grid, beta=lin_beta_L2_q3)
+lin_pred_tilted_25_q3 <- predict_lin_q3(x=x_grid, beta=lin_beta_tilted_25_q3)
+lin_pred_tilted_75_q3 <- predict_lin_q3(x=x_grid, beta=lin_beta_tilted_75_q3)
 
 ```
 

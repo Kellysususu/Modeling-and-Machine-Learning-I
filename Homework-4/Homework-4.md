@@ -1,23 +1,27 @@
 **Exercise 4**
 
-1.  On average, the fraction of the available observations would be
-    10%/2\*2=10%.
+1.  On average, the fraction of the available observations would be the
+    average fraction between \[0.05,0.95\]+\[0,0.05\]+\[0.95,1\]. After
+    using integral we can add the three areas up
+    :9+0.375+0.375=**9.75%**.
 
 2.  On average,the fraction of the available observations would be
-    10%\*10%=1%
+    9.75%\*9.75%=0.9506%
 
 3.  On average, the fraction of the available observations would be
-    0.1^{100}.
+    0.975<sup>100</sup>, which is nearly 0.
 
 4.  When p gets larger, the number of available observations decrease
     exponentially near any given test observation, which makes it
     difficult to find the best estimators for KNN.
 
 5.  Suppose we want to set the length of each side as l, if we want to
-    have l^{p}=0.1 we have to make l=sqrt\[p\]{0.1}. So:
+    have *l*<sup>*p*</sup> = 0.975 we have to make
+    l=$\\sqrt{0.975^{p}}$. So:
 
-when p=1, the length is 0.1 when p=2, the length is 0.1^{1/2}=0.316 when
-p=100, the length is 0.1^{1/100}=0.977
+when p=1, the length is 0.0975 when p=2, the length is
+0.0975<sup>1/2</sup>=0.3122 when p=100, the length is
+0.0975<sup>1/100</sup>=0.977
 
 **Exercise 10**
 

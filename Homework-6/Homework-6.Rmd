@@ -1,0 +1,93 @@
+---
+title: "Homework 6"
+author: "Kelly Chen"
+date: "3/27/2022"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+library(randomForest)
+library(dplyr)
+library(caret)
+library(ranger)
+data <- 
+  read.csv(url(
+    'https://hastie.su.domains/ElemStatLearn/datasets/vowel.train'))
+vowel_train<-data[,2:ncol(data)]
+```
+
+## 1. Convert the response variable in the “vowel.train” data frame to a factor variable
+
+```{r}
+vowel_train$y<-as.factor(vowel_train$y)
+```
+
+## 2. Review random forest function
+```{r}
+?randomForest
+```
+
+## 3. Fit randomforest model
+```{r}
+rf_fit<-randomForest(y~.,data=vowel_train)
+```
+
+## 4. Use 5-fold CV and tune the model
+
+```{r}
+# Set testing parameters
+mtry<-c(3,4,5)
+nodesize<-c(1,5,10,20,40,80)
+
+# Create 5 folds for the train control function
+control<-trainControl(method="cv",number=5,search="grid")
+
+
+set.seed(123)
+
+# Customizing the tuning grid
+grid<-expand.grid(.mtry=mtry,.min.node.size=nodesize,.splitrule='gini')
+fit<-train(y~.,data=vowel_train,trControl=control,method="ranger",tuneGrid=grid)
+
+# Transforming parameters into data-frame
+fit<-as.data.frame(fit[4])
+fit %>%
+  arrange(desc(results.Accuracy))
+
+# Using highest accuracy parameter to fit random forest
+rf_fit1<-randomForest(y~.,data=vowel_train,nodesize=1,mtry=3)
+```
+
+## 5. With the tuned model, make predictions using the majority vote method, and compute the misclassification rate using the ‘vowel.test’ data.
+
+```{r}
+# Load test data 
+test_data<-read.csv(url(
+    'https://hastie.su.domains/ElemStatLearn/datasets/vowel.test'))
+vowel_test<-test_data[,2:ncol(test_data)]
+
+# Convert response variable to factor
+test_y<-as.factor(vowel_test$y)
+
+# Use tuned model to make predictions
+pred<-predict(rf_fit1,newdata = vowel_test)
+
+# Calculate misclassificiation rate
+matrix<-confusionMatrix(test_y,pred)
+
+accuracy<-as.data.frame(matrix[3])[1,]
+
+mis_err<-1-accuracy
+
+mis_err
+warnings()
+```
+
+The mis-classification rate is 40.48%
+

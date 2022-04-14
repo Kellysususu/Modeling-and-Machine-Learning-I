@@ -203,7 +203,6 @@ line<-sapply(bd,lines,col="red")
 
 # Predict in keras
 kera_prob<-model %>%predict(dat$xnew)
-#kera_pred<-model %>%predict(dat$xnew)%>% k_argmax()
 
 # keras boundary
 keras_mx<-matrix(kera_prob[,1],length(dat$px1),length(dat$px2))

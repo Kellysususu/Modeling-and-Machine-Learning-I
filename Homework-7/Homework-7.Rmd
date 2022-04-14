@@ -18,6 +18,10 @@ library(tidyr)
 library(ggplot2)
 ```
 
+# 1. Work through "Image Classification" tutorial
+
+## Import the Fashion MNIST dataset
+
 ```{r}
 fashion_mnist<-dataset_fashion_mnist()
 
@@ -28,6 +32,8 @@ c(test_images,test_labels)%<-%fashion_mnist$test
 
 class_names=c('T-shirt/top',"Trouser","Pullover","Dress","Coat","Sandal","Shirt","Sneaker","Bag","Ankle foot")
 ```
+
+## Explore the data
 
 ```{r}
 image_1<-as.data.frame(train_images[1,,])
@@ -46,6 +52,8 @@ train_images<-train_images/255
 test_images<-test_images/255
 ```
 
+## Preprocess the data
+
 ```{r}
 par(mfcol=c(5,5))
 par(mar=c(0,0,1.5,0),xaxs="i",yaxs="i")
@@ -56,7 +64,7 @@ for (i in 1:25){
 }
 ```
 
-Build the model
+## Build the model
 
 ```{r}
 model<-keras_model_sequential()
@@ -67,7 +75,7 @@ model %>%
 ```
 
 
-Compile the model
+## Compile the model
 ```{r}
 model %>% compile(
   optimizer="adam",
@@ -76,12 +84,12 @@ model %>% compile(
 )
 ```
 
-Train the model
+## Train the model
 ```{r}
 model %>% fit(train_images,train_labels,epochs=5,verbose=2)
 ```
 
-Evaluate Accuracy
+## Evaluate Accuracy
 ```{r}
 score<-model%>% evaluate(test_images,test_labels,verbose=0)
 
@@ -96,7 +104,7 @@ class_pred[1:20]
 test_labels
 ```
 
-
+## Plot images with predictions
 ```{r}
 par(mfcol=c(5,5))
 par(mar=c(0,0,1.5,0),xaxs="i",yaxs="i")
@@ -116,7 +124,6 @@ for (i in 1:25){
 }
 ```
 
-
 ```{r}
 img<-test_images[1,,,drop=FALSE]
 dim(img)
@@ -127,15 +134,13 @@ predictions<-model %>% predict(img)
 predictions
 ```
 
-
 ```{r}
 prediction<-predictions[1,]-1
 which.max(prediction)
 ```
 
 
-
-2. Re-implement simple neural network dicussed during lecture
+# 2. Re-implement simple neural network dicussed during lecture
 ```{r}
 #############################
 ## Basic Neural Networks in R
@@ -177,9 +182,98 @@ Train the Model
 model %>% fit(dat$x,dat$y,epochs=5,verbose=2)
 ```
 
-3. Create a figure to illustrate the predictions compared to nnet
+# 3. Create a figure to illustrate the predictions compared to nnet
+
+## Fit nnet function
 
 ```{r}
-plot(dat$x[,1],dat$x[,2],col=ifelse(dat$y==0,"blue","orange"))
+nnet<-nnet(x=dat$x,y=dat$y,size = 10,entropy=TRUE,decay=0)
+nnet_pred<-predict(nnet,dat$xnew,type="class")
+nnet_mx<-matrix(nnet_pred,length(dat$px1),length(dat$px2))
+```
+
+
+```{r}
+plot(dat$x[,1],dat$x[,2],col=ifelse(dat$y==0,"blue","orange"),pch=20)
+prob<-matrix(dat$prob,length(dat$px1),length(dat$px2))
+
+# Draw Bayes Boundary
+bd<-contourLines(dat$px1,dat$px2,prob,levels=0.5)
+line<-sapply(bd,lines,col="red")
+
+# Predict in keras
+kera_prob<-model %>%predict(dat$xnew)
+#kera_pred<-model %>%predict(dat$xnew)%>% k_argmax()
+
+# keras boundary
+keras_mx<-matrix(kera_prob[,1],length(dat$px1),length(dat$px2))
+keras_bd<-contourLines(dat$px1,dat$px2,keras_mx,levels = 0.5)
+sapply(keras_bd,lines)
+
+# Plot nnet boundary
+nnet_bd<-contourLines(dat$px1,dat$px2,nnet_mx,levels=0.5)
+sapply(nnet_bd,lines,col="green")
+```
+
+
+
+
+**Extra Credit**
+
+## Pre-process data
+
+```{r}
+fashion_mnist<-dataset_fashion_mnist()
+
+
+c(train_images,train_labels)%<-% fashion_mnist$train
+
+c(test_images,test_labels)%<-%fashion_mnist$test
+
+class_names=c('T-shirt/top',"Trouser","Pullover","Dress","Coat","Sandal","Shirt","Sneaker","Bag","Ankle foot")
+
+train_images<-train_images/255
+test_images<-test_images/255
+```
+
+## Create the convolution base
+```{r}
+model_ec<-keras_model_sequential() %>%
+  layer_conv_2d(filters = 32,kernel_size = c(3,3),activation = "relu",input_shape = c(28,28,1))%>%
+  layer_max_pooling_2d(pool_size = c(2,2)) %>%
+  layer_conv_2d(filter=64,kernel_size=c(3,3),activation="relu")%>%
+  layer_max_pooling_2d(pool_size = c(2,2)) %>%
+  layer_conv_2d(filters=64,kernel_size = c(3,3),activation = "relu")
+
+summary(model_ec)
+```
+
+## Add dense layers on top
+
+```{r}
+model_ec %>%
+  layer_flatten(input_shape = c(28,28)) %>%
+  layer_dense(units = 128,activation = "relu") %>%
+  layer_dense(units = 10,activation="softmax")
+summary(model_ec)
+```
+
+## Compile and train the model
+
+```{r}
+model_ec %>% compile(
+  optimizer="adam",
+  loss="sparse_categorical_crossentropy",
+  metrics="accuracy"
+)
+
+history<-model_ec %>%
+  fit(x=train_images,y=train_labels,epochs=10,validation_data=fashion_mnist$test,
+      verbose=2)
+```
+
+## Evaluate the model
+```{r}
+plot(history)
 ```
 

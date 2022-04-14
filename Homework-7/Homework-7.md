@@ -22,6 +22,10 @@
     library(tidyr)
     library(ggplot2)
 
+# 1. Work through “Image Classification” tutorial
+
+## Import the Fashion MNIST dataset
+
     fashion_mnist<-dataset_fashion_mnist()
 
     ## Loaded Tensorflow version 2.8.0
@@ -31,6 +35,8 @@
     c(test_images,test_labels)%<-%fashion_mnist$test
 
     class_names=c('T-shirt/top',"Trouser","Pullover","Dress","Coat","Sandal","Shirt","Sneaker","Bag","Ankle foot")
+
+## Explore the data
 
     image_1<-as.data.frame(train_images[1,,])
     colnames(image_1)<-seq_len(ncol(image_1))
@@ -45,6 +51,8 @@
     train_images<-train_images/255
     test_images<-test_images/255
 
+## Preprocess the data
+
     par(mfcol=c(5,5))
     par(mar=c(0,0,1.5,0),xaxs="i",yaxs="i")
     for (i in 1:25){
@@ -55,7 +63,7 @@
 
 ![](Homework-7_files/figure-markdown_strict/unnamed-chunk-5-1.png)
 
-Build the model
+## Build the model
 
     model<-keras_model_sequential()
     model %>%
@@ -63,7 +71,7 @@ Build the model
       layer_dense(units = 128,activation = "relu") %>%
       layer_dense(units = 10,activation="softmax")
 
-Compile the model
+## Compile the model
 
     model %>% compile(
       optimizer="adam",
@@ -71,11 +79,11 @@ Compile the model
       metrics=c("accuracy")
     )
 
-Train the model
+## Train the model
 
     model %>% fit(train_images,train_labels,epochs=5,verbose=2)
 
-Evaluate Accuracy
+## Evaluate Accuracy
 
     score<-model%>% evaluate(test_images,test_labels,verbose=0)
 
@@ -83,8 +91,8 @@ Evaluate Accuracy
 
     predictions[1,]
 
-    ##  [1] 1.985246e-06 2.646846e-10 2.443136e-06 3.414826e-09 2.960140e-07
-    ##  [6] 1.416149e-02 9.017543e-07 1.003902e-02 4.826727e-06 9.757891e-01
+    ##  [1] 1.050784e-05 9.667837e-07 1.509286e-06 3.276473e-07 1.769340e-06
+    ##  [6] 1.909232e-02 2.088605e-06 4.972079e-02 9.112405e-05 9.310787e-01
 
     which.max(predictions[1,])
 
@@ -93,7 +101,7 @@ Evaluate Accuracy
     class_pred<-model %>% predict(test_images)%>% k_argmax()
     class_pred[1:20]
 
-    ## tf.Tensor([9 2 1 1 6 1 4 6 5 7 4 5 7 3 4 1 2 2 8 0], shape=(20,), dtype=int64)
+    ## tf.Tensor([9 2 1 1 6 1 4 6 5 7 4 5 5 3 4 1 2 2 8 0], shape=(20,), dtype=int64)
 
     test_labels
 
@@ -376,6 +384,8 @@ Evaluate Accuracy
     ##  [9937] 0 9 5 3 1 5 1 3 5 0 2 6 1 5 3 0 8 6 9 6 9 6 0 4 1 6 6 4 9 1 4 9 7 8 2 6
     ##  [9973] 2 9 7 8 5 6 9 6 0 0 8 1 3 2 7 5 8 4 5 6 8 9 1 9 1 8 1 5
 
+## Plot images with predictions
+
     par(mfcol=c(5,5))
     par(mar=c(0,0,1.5,0),xaxs="i",yaxs="i")
     for (i in 1:25){
@@ -403,19 +413,17 @@ Evaluate Accuracy
     predictions<-model %>% predict(img)
     predictions
 
-    ##              [,1]         [,2]         [,3]         [,4]        [,5]      [,6]
-    ## [1,] 1.985246e-06 2.646852e-10 2.443136e-06 3.414826e-09 2.96014e-07 0.0141615
-    ##             [,7]       [,8]         [,9]     [,10]
-    ## [1,] 9.01756e-07 0.01003902 4.826718e-06 0.9757891
+    ##              [,1]         [,2]         [,3]         [,4]         [,5]
+    ## [1,] 1.050783e-05 9.667837e-07 1.509283e-06 3.276467e-07 1.769337e-06
+    ##            [,6]         [,7]       [,8]         [,9]     [,10]
+    ## [1,] 0.01909231 2.088597e-06 0.04972072 9.112404e-05 0.9310787
 
     prediction<-predictions[1,]-1
     which.max(prediction)
 
     ## [1] 10
 
-1.  Re-implement simple neural network dicussed during lecture
-
-<!-- -->
+# 2. Re-implement simple neural network dicussed during lecture
 
     #############################
     ## Basic Neural Networks in R
@@ -656,10 +664,203 @@ Train the Model
 
     model %>% fit(dat$x,dat$y,epochs=5,verbose=2)
 
-1.  Create a figure to illustrate the predictions compared to nnet
+# 3. Create a figure to illustrate the predictions compared to nnet
 
-<!-- -->
+## Fit nnet function
 
-    plot(dat$x[,1],dat$x[,2],col=ifelse(dat$y==0,"blue","orange"))
+    nnet<-nnet(x=dat$x,y=dat$y,size = 10,entropy=TRUE,decay=0)
 
-![](Homework-7_files/figure-markdown_strict/unnamed-chunk-17-1.png)
+    ## # weights:  41
+    ## initial  value 150.926172 
+    ## iter  10 value 97.218035
+    ## iter  20 value 82.276361
+    ## iter  30 value 74.556636
+    ## iter  40 value 71.190518
+    ## iter  50 value 69.953669
+    ## iter  60 value 67.248824
+    ## iter  70 value 65.024126
+    ## iter  80 value 64.649411
+    ## iter  90 value 64.104008
+    ## iter 100 value 61.770042
+    ## final  value 61.770042 
+    ## stopped after 100 iterations
+
+    nnet_pred<-predict(nnet,dat$xnew,type="class")
+    nnet_mx<-matrix(nnet_pred,length(dat$px1),length(dat$px2))
+
+    plot(dat$x[,1],dat$x[,2],col=ifelse(dat$y==0,"blue","orange"),pch=20)
+    prob<-matrix(dat$prob,length(dat$px1),length(dat$px2))
+
+    # Draw Bayes Boundary
+    bd<-contourLines(dat$px1,dat$px2,prob,levels=0.5)
+    line<-sapply(bd,lines,col="red")
+
+    # Predict in keras
+    kera_prob<-model %>%predict(dat$xnew)
+    #kera_pred<-model %>%predict(dat$xnew)%>% k_argmax()
+
+    # keras boundary
+    keras_mx<-matrix(kera_prob[,1],length(dat$px1),length(dat$px2))
+    keras_bd<-contourLines(dat$px1,dat$px2,keras_mx,levels = 0.5)
+    sapply(keras_bd,lines)
+
+    ## [[1]]
+    ## NULL
+
+    # Plot nnet boundary
+    nnet_bd<-contourLines(dat$px1,dat$px2,nnet_mx,levels=0.5)
+    sapply(nnet_bd,lines,col="green")
+
+![](Homework-7_files/figure-markdown_strict/unnamed-chunk-18-1.png)
+
+    ## [[1]]
+    ## NULL
+    ## 
+    ## [[2]]
+    ## NULL
+    ## 
+    ## [[3]]
+    ## NULL
+    ## 
+    ## [[4]]
+    ## NULL
+    ## 
+    ## [[5]]
+    ## NULL
+    ## 
+    ## [[6]]
+    ## NULL
+    ## 
+    ## [[7]]
+    ## NULL
+    ## 
+    ## [[8]]
+    ## NULL
+    ## 
+    ## [[9]]
+    ## NULL
+    ## 
+    ## [[10]]
+    ## NULL
+    ## 
+    ## [[11]]
+    ## NULL
+    ## 
+    ## [[12]]
+    ## NULL
+    ## 
+    ## [[13]]
+    ## NULL
+    ## 
+    ## [[14]]
+    ## NULL
+    ## 
+    ## [[15]]
+    ## NULL
+    ## 
+    ## [[16]]
+    ## NULL
+    ## 
+    ## [[17]]
+    ## NULL
+
+**Extra Credit**
+
+## Pre-process data
+
+    fashion_mnist<-dataset_fashion_mnist()
+
+
+    c(train_images,train_labels)%<-% fashion_mnist$train
+
+    c(test_images,test_labels)%<-%fashion_mnist$test
+
+    class_names=c('T-shirt/top',"Trouser","Pullover","Dress","Coat","Sandal","Shirt","Sneaker","Bag","Ankle foot")
+
+    train_images<-train_images/255
+    test_images<-test_images/255
+
+## Create the convolution base
+
+    model_ec<-keras_model_sequential() %>%
+      layer_conv_2d(filters = 32,kernel_size = c(3,3),activation = "relu",input_shape = c(28,28,1))%>%
+      layer_max_pooling_2d(pool_size = c(2,2)) %>%
+      layer_conv_2d(filter=64,kernel_size=c(3,3),activation="relu")%>%
+      layer_max_pooling_2d(pool_size = c(2,2)) %>%
+      layer_conv_2d(filters=64,kernel_size = c(3,3),activation = "relu")
+
+    summary(model_ec)
+
+    ## Model: "sequential_2"
+    ## ________________________________________________________________________________
+    ##  Layer (type)                       Output Shape                    Param #     
+    ## ================================================================================
+    ##  conv2d_2 (Conv2D)                  (None, 26, 26, 32)              320         
+    ##                                                                                 
+    ##  max_pooling2d_1 (MaxPooling2D)     (None, 13, 13, 32)              0           
+    ##                                                                                 
+    ##  conv2d_1 (Conv2D)                  (None, 11, 11, 64)              18496       
+    ##                                                                                 
+    ##  max_pooling2d (MaxPooling2D)       (None, 5, 5, 64)                0           
+    ##                                                                                 
+    ##  conv2d (Conv2D)                    (None, 3, 3, 64)                36928       
+    ##                                                                                 
+    ## ================================================================================
+    ## Total params: 55,744
+    ## Trainable params: 55,744
+    ## Non-trainable params: 0
+    ## ________________________________________________________________________________
+
+## Add dense layers on top
+
+    model_ec %>%
+      layer_flatten(input_shape = c(28,28)) %>%
+      layer_dense(units = 128,activation = "relu") %>%
+      layer_dense(units = 10,activation="softmax")
+    summary(model_ec)
+
+    ## Model: "sequential_2"
+    ## ________________________________________________________________________________
+    ##  Layer (type)                       Output Shape                    Param #     
+    ## ================================================================================
+    ##  conv2d_2 (Conv2D)                  (None, 26, 26, 32)              320         
+    ##                                                                                 
+    ##  max_pooling2d_1 (MaxPooling2D)     (None, 13, 13, 32)              0           
+    ##                                                                                 
+    ##  conv2d_1 (Conv2D)                  (None, 11, 11, 64)              18496       
+    ##                                                                                 
+    ##  max_pooling2d (MaxPooling2D)       (None, 5, 5, 64)                0           
+    ##                                                                                 
+    ##  conv2d (Conv2D)                    (None, 3, 3, 64)                36928       
+    ##                                                                                 
+    ##  flatten_2 (Flatten)                (None, 576)                     0           
+    ##                                                                                 
+    ##  dense_5 (Dense)                    (None, 128)                     73856       
+    ##                                                                                 
+    ##  dense_4 (Dense)                    (None, 10)                      1290        
+    ##                                                                                 
+    ## ================================================================================
+    ## Total params: 130,890
+    ## Trainable params: 130,890
+    ## Non-trainable params: 0
+    ## ________________________________________________________________________________
+
+## Compile and train the model
+
+    model_ec %>% compile(
+      optimizer="adam",
+      loss="sparse_categorical_crossentropy",
+      metrics="accuracy"
+    )
+
+    history<-model_ec %>%
+      fit(x=train_images,y=train_labels,epochs=10,validation_data=fashion_mnist$test,
+          verbose=2)
+
+## Evaluate the model
+
+    plot(history)
+
+    ## `geom_smooth()` using formula 'y ~ x'
+
+![](Homework-7_files/figure-markdown_strict/unnamed-chunk-23-1.png)
